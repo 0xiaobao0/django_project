@@ -14,10 +14,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url
+
+from message.views import getform
+
 from django.contrib import admin
-from apps.message.views import getform
+
+import xadmin
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^form/$', getform)
+    url(r'^xadmin/', xadmin.site.urls),
+    url(r'^forms/$', getform, name='go_form')
 ]
