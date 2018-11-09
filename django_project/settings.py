@@ -43,8 +43,10 @@ INSTALLED_APPS = [
     'users',
     'xadmin',
     'crispy_forms',
+    'wechat_login',
 ]
 AUTH_USER_MODEL = "users.UserProfile"
+ALLOWED_HOSTS = ['*']
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
@@ -91,6 +93,18 @@ DATABASES = {
         'HOST':'127.0.0.1',
         'OPTIONS':{
             "init_command":"SET foreign_key_checks = 0;",
+        }
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': '127.0.0.1:6379',
+        'TIMEOUT': 600,
+        'OPTIONS': {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,
         }
     }
 }

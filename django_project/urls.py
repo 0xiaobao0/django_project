@@ -14,14 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url
-
 from message.views import getform
-
+import wechat_login.views
 from django.contrib import admin
-
 import xadmin
+
+userbond = wechat_login.views.web_authorization()
+
+
 
 urlpatterns = [
     url(r'^xadmin/', xadmin.site.urls),
-    url(r'^forms/$', getform, name='go_form')
+    url(r'^forms/$', getform, name='go_form'),
+    url(r'^auth/$', userbond.get)
 ]
