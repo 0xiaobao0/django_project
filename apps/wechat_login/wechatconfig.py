@@ -4,7 +4,7 @@ __date__ = '2018/11/9 13:47'
 
 app_id = 'wxb0b4327e8a283ae6'
 app_secret = '0259f25925f82e5415085b0c8e0c397e'
-redirect_url = '0smallwhite0.vicp.io:16991/'
+redirect_url = 'http://0smallwhite0.vicp.io:16991/auth'
 state = 'STATE'
 
 web_get_code = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=%s&redirect_uri=%s&response_type=code&state=%s&scope='%(app_id,redirect_url,state)

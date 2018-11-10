@@ -34,15 +34,15 @@ class web_authorization(View):
             fan_info.encoding = 'utf-8'
             fan_info = fan_info.json()
             profile = UserProfile()
-            profile.openid = fan_info.content.openid
-            profile.nickname = fan_info.content.nickname
-            profile.sex = fan_info.content.sex
-            profile.city = fan_info.content.city
-            profile.headimgurl = fan_info.content.headimgurl
+            profile.openid = fan_info['openid']
+            profile.nickname = fan_info['nickname']
+            profile.sex = fan_info['sex']
+            profile.city = fan_info['city']
+            profile.headimgurl = fan_info['headimgurl']
             profile.save()
         check_openid = UserProfile.objects.filter(openid=fan_openid).first()
         if not check_openid:
             return render(request, 'register.html', {'url': web_get_code+'snsapi_userinfo#wechat_redirect','header':'认证提示','text':'你还未进行信息认证,请进行第一次认证'})
-        response = HttpResponseRedirect('/xadmin/')
+        response = HttpResponseRedirect('/forms/')
         response.set_cookie('fanid',check_openid.id,3600)
         return response
