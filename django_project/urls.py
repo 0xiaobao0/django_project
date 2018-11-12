@@ -18,12 +18,16 @@ from message.views import getform
 import wechat_login.views
 from django.contrib import admin
 import xadmin
+from django.views.generic.base import RedirectView
+
+
 
 userbond = wechat_login.views.web_authorization()
 
 
 
 urlpatterns = [
+    url(r'^favicon.ico$',RedirectView.as_view(url=r'static/favicon.ico')),
     url(r'^xadmin/', xadmin.site.urls),
     url(r'^forms/$', getform, name='go_form'),
     url(r'^auth/$', userbond.get)

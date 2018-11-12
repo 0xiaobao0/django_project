@@ -18,24 +18,21 @@ class web_authorization(View):
         requests_web_get_access_token_result = requests.get(web_get_access_token+code).json()
         if 'errmsg' in requests_web_get_access_token_result.keys():
             return HttpResponseRedirect(web_get_code+'snsapi_base#wechat_redirect')
-        # if cache.has_key('web_access_token'):
-        #     web_access_token = cache.get('web_access_token')
-        # else:
-        web_access_token = requests_web_get_access_token_result['access_token']
-            # cache.set('web_access_token',web_access_token,20*60)
+        if cache.has_key('web_access_token'):
+            web_access_token = cache.get('web_access_token')
+        else:
+            web_access_token = requests_web_get_access_token_result['access_token']
+            cache.set('web_access_token',web_access_token,110*60)
         fan_openid = requests_web_get_access_token_result['openid']
-        scope = requests_web_get_access_token_result["scope"]
-
         # 这部分检验对于缓存来说是多余的，但是你如果担心缓存出问题，可以再次检验一波
         # check_access_token = requests.get(web_check_access_token+'%s&openid=%s'%(web_access_token,fan_openid)).json()
         # if check_access_token['errcode']!=0:
         #     return HttpResponseRedirect(web_get_code+'snsapi_base#wechat_redirect')
-
-        fan_info = requests.get(web_get_fan_info + '%s&openid=%s&lang=zh_CN' % (web_access_token, fan_openid))
-        fan_info.encoding = 'utf-8'
-        fan_info = fan_info.json()
-
+        scope = requests_web_get_access_token_result["scope"]
         if scope == "snsapi_userinfo":
+            fan_info = requests.get(web_get_fan_info + '%s&openid=%s&lang=zh_CN' % (web_access_token, fan_openid))
+            fan_info.encoding = 'utf-8'
+            fan_info = fan_info.json()
             profile = UserProfile()
             profile.openid = fan_info['openid']
             profile.nickname = fan_info['nickname']
@@ -43,16 +40,9 @@ class web_authorization(View):
             profile.city = fan_info['city']
             profile.headimgurl = fan_info['headimgurl']
             profile.save()
-        # 如果没有数据库中没有检索到该用户的openid，则该用户为第一次登陆，让其跳转到授权页面，
-        # 当其点击带有修改后scope的值的按钮后，再次跳转到该页面执行以上scope == "snsapi_userinfo"
-        # 的逻辑，从而保存其信息
-        check_openid = UserProfile.objects.filter(openid=fan_info['openid']).first()
+        check_openid = UserProfile.objects.filter(openid=fan_openid).first()
         if not check_openid:
             return render(request, 'register.html', {'url': web_get_code+'snsapi_userinfo#wechat_redirect','header':'认证提示','text':'你还未进行信息认证,请进行第一次认证'})
-        #当非第一次登陆时，检测用户头像是否发生变化，若变化，则修改头像url。
-        check_headimgurl = UserProfile.objects.filter(headimgurl = fan_info['headimgurl'], openid = fan_info['openid']).first()
-        if not check_headimgurl:
-            UserProfile.objects.filter(openid = fan_info['openid']).update(headimgurl = fan_info['headimgurl'])
         response = HttpResponseRedirect('/forms/')
         response.set_cookie('fanid',check_openid.id,3600)
         return response

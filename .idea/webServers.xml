@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="162196ed-0340-4c82-800f-0c9a38944ab2" name="declare" url="http://123.206.79.243">
+        <fileTransfer host="123.206.79.243" port="22" rootFolder="/xampp/www/django_project" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
