@@ -20,6 +20,10 @@ from django.contrib import admin
 import xadmin
 from django.views.generic.base import RedirectView
 
+from django_project.settings import MEDIA_ROOT
+from django.views.static import serve
+
+
 
 
 userbond = wechat_login.views.web_authorization()
@@ -30,5 +34,11 @@ urlpatterns = [
     url(r'^favicon.ico$',RedirectView.as_view(url=r'static/favicon.ico')),
     url(r'^xadmin/', xadmin.site.urls),
     url(r'^forms/$', getform, name='go_form'),
-    url(r'^auth/$', userbond.get)
+    url(r'^auth/$', userbond.get),
+    url(r'^index/$', userbond.getindex),
+    url(r'^test/$', userbond.test),
+    url(r'^declare/$', userbond.declaration),
+    url(r'^upload/$', userbond.post),
+    url(r'^media/(?P<path>.*)', serve, {"document_root": MEDIA_ROOT}),
+
 ]
