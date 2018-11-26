@@ -31,10 +31,16 @@ class DeclareProfile(models.Model):
     sender = models.ForeignKey(UserProfile, verbose_name=u'发送者', default=u"", blank=True, null=True)
     towho = models.CharField(max_length=20, verbose_name=u'接受者', default=u"", blank=True, null=True)
     anonymous = models.IntegerField(verbose_name="是否匿名", choices=((1, u"匿名"), (0, "不匿名")), default=0, blank=True, null=True)
-    image = models.ImageField(upload_to="image/%Y/%m", default=u"image/default.png")
     imgurl= models.CharField(max_length=100, verbose_name='图片url', default=u"", blank=True, null=True)
     content = models.CharField(max_length=5000, verbose_name=u'内容', default=u"", blank=True, null=True)
     create_time = models.DateTimeField(verbose_name='提交时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = u"表白信息"
+        verbose_name_plural = verbose_name
+
+    def __unicode__(self):
+        return self.declareid
 
 
 

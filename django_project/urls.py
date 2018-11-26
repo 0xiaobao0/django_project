@@ -23,6 +23,8 @@ from django.views.generic.base import RedirectView
 from django_project.settings import MEDIA_ROOT
 from django.views.static import serve
 
+from django.conf.urls import url, include
+from rest_framework import routers
 
 
 
@@ -38,7 +40,11 @@ urlpatterns = [
     url(r'^index/$', userbond.getindex),
     url(r'^test/$', userbond.test),
     url(r'^declare/$', userbond.declaration),
-    url(r'^upload/$', userbond.post),
+    url(r'^upload/$', userbond.upload_img),
+    # url(r'^upload_status/$', userbond.upload_status),
     url(r'^media/(?P<path>.*)', serve, {"document_root": MEDIA_ROOT}),
+    url(r'^show/$', userbond.show_messages),
+    url(r'^messages/$', wechat_login.views.MessageViewSet.as_view(), name='message_list'),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 
 ]

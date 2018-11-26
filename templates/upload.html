@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>提交</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+    <form method="POST" action="127.0.0.1:8000/declare/" enctype="multipart/form-data">
+        <input name="key" type="hidden" value="{{ key }}">
+        <input name="token" type="hidden" value="{{ token }}">
+        <input name="image" type="file"></br>
+        <input name="towho" type="text"></br>
+        <input name="anonymous" type="text"></br>
+        <input name="content" type="text"></br>
+        <input type="submit">
+    </form>
+{% csrf_token %}
+<script type="text/javascript">
+	var formData = new FormData();
+	formData.append('image', document.getElementsByName('image').files);
+	formData.append('key', document.getElementsByName('key'));
+	formData.append('token', document.getElementsByName('image'));
+	$.ajax({
+		url: 'http://up-z1.qiniup.com/',
+		data: formData,
+        type: "POST",
+        contentType: false,//这里
+        processData: false,//这两个一定设置为false
+
+        success: function (data) {
+        	alert("succeed!");
+        },
+        error:function(e){
+                    alert(e);
+                    window.clearInterval(timer);
+                }
+	})
+</script>
+</body>
+</html>
