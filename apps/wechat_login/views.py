@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, render_to_response
 from django.template import RequestContext
 from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
+from django.forms.models import model_to_dict
 from .models import UserProfile
 from .models import DeclareProfile
 import requests
@@ -15,19 +16,16 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination,PageNumberPagination,CursorPagination
-from .serializers import MessageSerializer
-# import time
-#
-# from qiniu import Auth, put_file, etag
-# import qiniu.config
-#
-# accessKey  = 'EI5u9AjeOC8Z6E-dO8779gUHFvn2OzZygG6TTaWy'
-# secretKey = 'UhfftOyhvZ4rYYrxVkwkg-KD0Xtf685zTkYZAXz9'
-# bucket = '0store0'
-# domain = 'img.hellowmrliu.cn'
+from .serializers import MessageSerializer, UsermessageSerrializer
+
+from .decorator import check_login
+
+from .forms import DeclareModelForm, DeclareForm
+
+from django.forms.models import model_to_dict
 
 # Create your views here.
-class P1(LimitOffsetPagination):
+class Message_Page(LimitOffsetPagination):
     default_limit =1#一页默认几个
     limit_query_param = 'limit' #关键字后面跟的是一页显示几个
     offset_query_param = 'offset'#这个后面跟的是从哪里显示
@@ -36,45 +34,23 @@ class P1(LimitOffsetPagination):
 
 
 class BaseResponse(object):
-    def __init__(self,code=1000,data=None,error=None):
-        self.code=code
-        self.data=data
-        self.error=error
+    def __init__(self,result=None,code=1000,message=None,data=None,error=None):
+        self.result = {}
+        self.result['code']=code
+        self.result['message'] = message
+        self.result['data']=data
+        self.result['error']=error
 
 
-class MessageViewSet(APIView):
-    def get(self, request, format=None):
-        ret = BaseResponse()
-        try:
-            messages = DeclareProfile.objects.all()#找到所有的数据项
-            p1 = P1()#实例化分页器，
-            page_message_list = p1.paginate_queryset(queryset=messages, request=request, view=self)#把数据放在分页器上面
-            serializer = MessageSerializer(instance=page_message_list, many=True)#序列化数据
-            ret.data = serializer.data
-            ret.next = p1.get_next_link()
-        except Exception as e:
-            ret.code = 1001
-            ret.error = u'获取信息失败'
-        return Response(ret.data)
-
-    def post(self, request, format=None):
-        serializer = MessageSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            # return  p1.get_paginated_response(ret)#这个会显示上一页和下一页
-            # return  p1.get_paginated_response(ser.data)
-
-
-class web_authorization(View):
-
+class Web_authorization(View):
     def get(self, request):
+        ret = BaseResponse()
         from wechatconfig import web_get_code, web_get_fan_info,web_get_access_token,web_check_access_token
         code = request.GET.get("code", "")
         if not code:
-            return HttpResponse(u"非法访问")
+            ret.result['code'] = 4004
+            ret.result['error'] = 'Unauthorized user'
+            return HttpResponse(ret.result)
         requests_web_get_access_token_result = requests.get(web_get_access_token+code).json()
         if 'errmsg' in requests_web_get_access_token_result.keys():
             print  requests_web_get_access_token_result['errmsg']
@@ -102,84 +78,127 @@ class web_authorization(View):
         return redirect('/index')
 
 
-    def test(self, request):
-        request.session['user_openid'] = 'ozKcL0l3gjCmZrSGKLMMIFvT-9B8'  # 在Django 中一句话搞定
-        request.session['islogin'] = True
-        return redirect('/index')
+def test(request):
+    request.session['user_openid'] = 'ozKcL0l3gjCmZrSGKLMMIFvT-9B8'  # 在Django 中一句话搞定
+    request.session['islogin'] = True
+    # request.session.flush()
+    return redirect('/index')
 
-    def jugelogin(self, request):
-        if(request.session.get('islogin') == True):
-            openid = request.session.get('user_openid')
-            # print(openid)
-            if openid:
-                return {'code': 2000, 'msg': u"登陆成功", 'openid': openid}
+class UsermessageViewSet(APIView):
+    @check_login
+    def get(self, request, format=None):
+        ret = BaseResponse()
+        try:
+            useropenid = request.session.get('user_openid')
+            user_message = UserProfile.objects.filter(openid=useropenid)#千万不要在后面加上.first()!!!!!!!!!!!!!
+            serializer = UsermessageSerrializer(instance=user_message, many=True)
+            ret.result['code'] = 2000
+            ret.result['message'] = "Successful access to user information"
+            ret.result['data'] = serializer.data
+            return Response(ret.result)
+        except:
+            ret.result['code'] = 4002
+            ret.result['error'] = "Can't found the user"
+            return Response(ret.result)
+
+
+class MessageViewSet(APIView):
+    def get(self, request, format=None):
+        ret = BaseResponse()
+        try:
+            messages = DeclareProfile.objects.all()#找到所有的数据项
+            message_Page = Message_Page()#实例化分页器，
+            page_message_list = message_Page.paginate_queryset(queryset=messages, request=request, view=self)#把数据放在分页器上面
+            serializer = MessageSerializer(instance=page_message_list, many=True)#序列化数据
+            ret.result['code'] = 2001
+            ret.result['message'] = 'Successful Access to Presentation Information'
+            ret.result['data'] = serializer.data
+            ret.next = message_Page.get_next_link()
+        except Exception as e:
+            ret.result['code'] = 4003
+            ret.result['error'] = u'Faild to get Presentation Information'
+        return Response(ret.result)
+
+    # def post(self, request, format=None):
+    #     serializer = MessageSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #         # return  p1.get_paginated_response(ret)#这个会显示上一页和下一页
+    #         # return  p1.get_paginated_response(ser.data)
+
+
+def get_qiniu_token_and_key():
+    import qiniu
+    import uuid
+    ACCESS_KEY = 'EI5u9AjeOC8Z6E-dO8779gUHFvn2OzZygG6TTaWy'
+    SECRET_KEY = 'UhfftOyhvZ4rYYrxVkwkg-KD0Xtf685zTkYZAXz9'
+    BUCKET_NAME = '0store0'
+    key = str(uuid.uuid1()).replace('-', '')  # 这里使用uuid作为保存在七牛里文件的名字。并去掉了uuid中的“-”
+    q = qiniu.Auth(ACCESS_KEY, SECRET_KEY)
+    token = q.upload_token(BUCKET_NAME, key, 7200, {
+        'returnBody': '{"name": "$(fname)", "key": "$(key)"}',
+        'fsizeLimit': 5242880,
+        'mimeLimit': 'image/*'
+    })
+    return {'token': token, 'key': key}
+
+
+class Declaration(APIView):
+    @check_login
+    def get(self, request):
+        token_key_dict = get_qiniu_token_and_key()
+        return render(request, 'upload.html', token_key_dict)
+
+    @check_login
+    def post(self, request):
+        ret = BaseResponse()
+        if True:
+            form_querydict = request.POST
+            new_form_querydict = form_querydict.copy()
+            useropenid = request.session.get('user_openid')
+            userid = UserProfile.objects.filter(openid=useropenid).first().userid
+            new_form_querydict.__setitem__('sender', userid)
+            declare_form = DeclareForm(new_form_querydict)
+            declare_model_form = DeclareModelForm(new_form_querydict)
+            valid = declare_form.is_valid()
+            if valid == True:
+                declare_model_form.save()
+                ret.result['code'] = 2002
+                ret.result['message'] = 'save succeed'
+                ret.result['data'] = {'imgurl': new_form_querydict.get('imgurl')}
             else:
-                return {'code': 4001, 'errmsg': u"非法请求"}
+                result_dict = get_qiniu_token_and_key()
+                result_dict['form'] = declare_form
+                return render(request, 'upload.html', result_dict)
         else:
-            return {'code': 4000, 'errmsg': u"请先登录"}
-
-    def getindex(self, request):
-        result = self.jugelogin(request)
-        if 'errmsg' in result.keys():
-            return HttpResponse(result['errmsg'])
-        else:
-            useropenid = result['openid']
-            user = UserProfile.objects.filter(openid=useropenid).first()
-            if user:
-                # print user.nickname, user.sex, user.city, user.headimgurl
-                return render(request, 'index.html', {'nickname': user.nickname, 'sex': user.sex, 'city': user.city,
-                                                      'headimgurl': user.headimgurl})
-            else:
-                return HttpResponse(u'用户登录过期，请重新登录')
-
-    def declaration(self,request):
-        if request.method == 'GET':
-            return render(request, 'userform.html')
-
-        if request.method == 'POST':
-            result = self.jugelogin(request)
-            if 'errmsg' in result.keys():
-                return HttpResponse(result['errmsg'])
-            else:
-                useropenid = result['openid']
-                userid = UserProfile.objects.filter(openid=useropenid).first().userid
-                profile = DeclareProfile()
-                profile.sender_id = userid
-                profile.towho=request.POST.get('towho', '')
-                profile.anonymous=request.POST.get('anonymous', '')
-                profile.content=request.POST.get('content', '')
-                profile.imgurl = request.POST.get('img_url', '')
-                profile.save()
-            return HttpResponse(u'提交保存成功')
+            ret.result['code'] = 4004
+            ret.result['error'] = 'Faild to upload'
+        return Response(ret.result)
 
 
-    def upload_img(self,request):
-        import qiniu
-        import uuid
-        result = self.jugelogin(request)
-        if 'errmsg' in result.keys():
-            return HttpResponse(result['errmsg'])
-        else:
-            useropenid = result['openid']
-        ACCESS_KEY = 'EI5u9AjeOC8Z6E-dO8779gUHFvn2OzZygG6TTaWy'
-        SECRET_KEY = 'UhfftOyhvZ4rYYrxVkwkg-KD0Xtf685zTkYZAXz9'
-        BUCKET_NAME = '0store0'
-        key = str(uuid.uuid1()).replace('-', '')  # 这里使用uuid作为保存在七牛里文件的名字。并去掉了uuid中的“-”
-        q = qiniu.Auth(ACCESS_KEY, SECRET_KEY)
-        token = q.upload_token(BUCKET_NAME, key, 7200, {
-                                                        'returnBody': '{"name": "$(fname)", "key": "$(key)"}',
-                                                        'fsizeLimit': 5242880,
-                                                        'mimeLimit': 'image/*'
-                                                        })
-        return render(request, 'upload.html', {'token': token, 'key': key})
+# class Upload(View):
+#     @check_login
+#     def get(self, request):
+#         import qiniu
+#         import uuid
+#         ACCESS_KEY = 'EI5u9AjeOC8Z6E-dO8779gUHFvn2OzZygG6TTaWy'
+#         SECRET_KEY = 'UhfftOyhvZ4rYYrxVkwkg-KD0Xtf685zTkYZAXz9'
+#         BUCKET_NAME = '0store0'
+#         key = str(uuid.uuid1()).replace('-', '')  # 这里使用uuid作为保存在七牛里文件的名字。并去掉了uuid中的“-”
+#         q = qiniu.Auth(ACCESS_KEY, SECRET_KEY)
+#         token = q.upload_token(BUCKET_NAME, key, 7200, {
+#             'returnBody': '{"name": "$(fname)", "key": "$(key)"}',
+#             'fsizeLimit': 5242880,
+#             'mimeLimit': 'image/*'
+#         })
+#         return render(request, 'upload.html', {'token': token, 'key': key})
 
 
-    def show_messages(self,request):
-        from django.core import serializers
-        messages = DeclareProfile.objects.all()[:2]
-        json_data = serializers.serialize('json', messages)
-        json_data = json.loads(json_data)
-        pass
+
+
 
 
 

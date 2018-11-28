@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url
 from message.views import getform
-import wechat_login.views
+from wechat_login.views import *
 from django.contrib import admin
 import xadmin
 from django.views.generic.base import RedirectView
@@ -28,23 +28,19 @@ from rest_framework import routers
 
 
 
-userbond = wechat_login.views.web_authorization()
-
-
-
 urlpatterns = [
     url(r'^favicon.ico$',RedirectView.as_view(url=r'static/favicon.ico')),
     url(r'^xadmin/', xadmin.site.urls),
     url(r'^forms/$', getform, name='go_form'),
-    url(r'^auth/$', userbond.get),
-    url(r'^index/$', userbond.getindex),
-    url(r'^test/$', userbond.test),
-    url(r'^declare/$', userbond.declaration),
-    url(r'^upload/$', userbond.upload_img),
+    url(r'^auth/$', Web_authorization.as_view()),
+    url(r'^index/$', UsermessageViewSet.as_view()),
+    url(r'^test/$', test),
+    url(r'^declare/$', Declaration.as_view()),
+    # url(r'^upload/$', Upload.as_view(), name='upload'),
     # url(r'^upload_status/$', userbond.upload_status),
     url(r'^media/(?P<path>.*)', serve, {"document_root": MEDIA_ROOT}),
-    url(r'^show/$', userbond.show_messages),
-    url(r'^messages/$', wechat_login.views.MessageViewSet.as_view(), name='message_list'),
+    # url(r'^show/$', show_messages),
+    url(r'^messages/$', MessageViewSet.as_view(), name='message_list'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 
 ]
