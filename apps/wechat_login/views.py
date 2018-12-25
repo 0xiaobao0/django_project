@@ -220,8 +220,9 @@ class Declaration(APIView):
                 ret.result['data'] = {'imgurl': new_form_querydict.get('imgurl')}
             else:
                 result_dict = get_qiniu_token_and_key(request)
-                result_dict['form'] = declare_form
-                return render(request, 'upload.html', result_dict)
+                new_dict = json.loads(result_dict.content)
+                new_dict['form'] = declare_form
+                return render(request, 'upload.html', new_dict)
         else:
             ret.result['code'] = 4004
             ret.result['error'] = 'Faild to upload'
