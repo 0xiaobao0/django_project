@@ -28,8 +28,6 @@ SECRET_KEY = 'magw5t4n!yg)6c(88df+i^l#&*jk7&4n76%tf3nz7&k%)@xflv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -47,6 +45,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'wechat_login',
     'rest_framework',
+    'corsheaders',
 ]
 AUTH_USER_MODEL = "users.UserProfile"
 ALLOWED_HOSTS = ['*']
@@ -54,13 +53,18 @@ ALLOWED_HOSTS = ['*']
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware', # 注意顺序
 ]
+
+
+
 
 ROOT_URLCONF = 'django_project.urls'
 
@@ -118,7 +122,7 @@ SESSION_COOKIE_PATH = "/"  # Session的cookie保存的路径（默认）
 SESSION_COOKIE_DOMAIN = None  # Session的cookie保存的域名（默认）
 SESSION_COOKIE_SECURE = False  # 是否Https传输cookie（默认）
 SESSION_COOKIE_HTTPONLY = True  # 是否Session的cookie只支持http传输（默认）
-SESSION_COOKIE_AGE = 60*60  # Session的cookie失效日期（60分钟）（默认2周）
+SESSION_COOKIE_AGE = 60*60*24  # Session的cookie失效日期（一天）（默认2周）
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 是否关闭浏览器使得Session过期（默认）
 SESSION_SAVE_EVERY_REQUEST = False  # 是否每次请求都保存Session，默认修改之后才保存（默认）
 
@@ -140,6 +144,17 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (    '*')
+
+# CORS_ORIGIN_WHITELIST = (
+#     '187390zf80.iask.in:51095',
+#     '127.0.0.1:8001',
+#     'localhost:8001', #凡是出现在白名单中的域名，都可以访问后端接口
+# )
+# CORS_ALLOW_CREDENTIALS = True  # 指明在跨域访问中，后端是否支持对cookie的操作
 
 
 # Internationalization

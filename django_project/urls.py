@@ -41,6 +41,8 @@ urlpatterns = [
     url(r'^media/(?P<path>.*)', serve, {"document_root": MEDIA_ROOT}),
     # url(r'^show/$', show_messages),
     url(r'^messages/$', MessageViewSet.as_view(), name='message_list'),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^get-upload-token/$', get_qiniu_token_and_key),
+    url(r'^change_usermessage/$', Change_usermessage.as_view()),
 
 ]

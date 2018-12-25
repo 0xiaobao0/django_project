@@ -3,6 +3,7 @@ __author__ = 'wangchuan'
 __date__ = '2018/11/28 9:29'
 from django import forms
 from .models import DeclareProfile
+from .models import UserProfile
 
 
 class DeclareForm(forms.Form):
@@ -17,3 +18,8 @@ class DeclareModelForm(forms.ModelForm):
         model = DeclareProfile
         fields = '__all__'
         exclude = ['create_time']
+
+# class ChangeForm(forms.ModelForm):
+#     class Meta:
+#         model = UserProfile
+#         fields = ['nickname', 'headimgurl', 'city' ,'sex']

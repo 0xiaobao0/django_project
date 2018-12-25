@@ -12,7 +12,7 @@ function ajaxform() {
         processData: false,//这两个一定设置为false
 
         success: function (data) {
-            url = 'img.hellowmrliu.cn/'+data['key'];
+            url = 'http://'+'img.hellowmrliu.cn/'+data['key'];
             setdata(url)
         }
         // error:function(){
